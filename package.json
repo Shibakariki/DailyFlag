@@ -1,0 +1,10 @@
+{
+  "name": "daily-flag",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily Flag : le quiz quotidien des drapeaux du monde",
+  "scripts": {
+    "dev": "npx serve . -l 3000"
+  }
+}

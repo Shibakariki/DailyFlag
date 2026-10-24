@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Daily Flag : le quiz quotidien des drapeaux du monde. 10 drapeaux par jour, du plus facile au plus difficile.">
+<title>Daily Flag – Le quiz quotidien des drapeaux</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚩</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>Daily <span>Flag</span></h1>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <section class="card">
+    <div class="dots" id="dots"></div>
+
+    <div id="q">
+      <span class="tier" id="tier"></span>
+      <div class="flag ef" id="flag" role="img" aria-label="Drapeau à deviner"></div>
+      <h2>De quel pays est ce drapeau ?</h2>
+      <div class="opts" id="opts"></div>
+      <button class="next hide" id="next">Suivant</button>
+    </div>
+
+    <div class="end hide" id="end">
+      <div class="meta">Votre score du jour</div>
+      <div class="score" id="score"></div>
+      <div class="grid" id="grid"></div>
+      <button class="share" id="share">Partager mon résultat</button>
+      <div class="cd" id="cd"></div>
+      <div class="recap" id="recap"></div>
+    </div>
+  </section>
+</main>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
