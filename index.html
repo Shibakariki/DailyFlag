@@ -13,10 +13,31 @@
 <main>
   <header>
     <h1>Daily <span>Flag</span></h1>
-    <div class="meta" id="meta"></div>
+    <nav class="top-nav" aria-label="Navigation">
+      <button class="top-nav-btn active" data-tab="daily">Daily</button>
+      <button class="top-nav-btn" data-tab="training">Entraînement</button>
+    </nav>
+    <div class="day-picker">
+      <button class="day-toggle" id="day-toggle" aria-haspopup="dialog" aria-expanded="false">
+        <span id="meta"></span>
+        <span class="day-chevron">▾</span>
+      </button>
+      <div class="day-popup hide" id="day-popup" role="dialog" aria-label="Choisir un jour">
+        <div id="cal-container"></div>
+      </div>
+    </div>
+    <div class="countries-picker hide">
+      <button class="countries-toggle" id="countries-toggle" aria-haspopup="dialog" aria-expanded="false">
+        <span>Pays</span>
+        <span class="day-chevron">▾</span>
+      </button>
+      <div class="countries-popup hide" id="countries-popup" role="dialog" aria-label="Liste des pays">
+        <div class="countries-list" id="countries-list"></div>
+      </div>
+    </div>
   </header>
 
-  <section class="card">
+  <section class="card" id="quiz">
     <div class="dots" id="dots"></div>
 
     <div id="q">
@@ -28,15 +49,19 @@
     </div>
 
     <div class="end hide" id="end">
-      <div class="meta">Votre score du jour</div>
+      <div class="meta" id="end-title">Votre score du jour</div>
       <div class="score" id="score"></div>
       <div class="grid" id="grid"></div>
       <button class="share" id="share">Partager mon résultat</button>
+      <div class="stats" id="stats"></div>
       <div class="cd" id="cd"></div>
+      <button class="next hide" id="replay">↺ Rejouer</button>
       <div class="recap" id="recap"></div>
     </div>
   </section>
+
 </main>
+
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
