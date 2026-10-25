@@ -1,10 +1,12 @@
 import { buildDailyQuiz, buildTrainingQuiz } from "./game/quiz.js";
 import { todayKey, dayNumber, dayNumberFromKey, formatDayKey, EPOCH_KEY, countdownToMidnight } from "./lib/date.js";
-import { loadProgress, saveProgress, loadDayResult, saveDayResult, recordCompletion } from "./lib/storage.js";
+import { loadProgress, saveProgress, loadDayResult, saveDayResult, loadPlayerProfile, savePlayerProfile, recordCompletion } from "./lib/storage.js";
+import { isWorldConfigured, loadRemotePlayer, submitAndLoadWorld, upsertPlayerProfile } from "./lib/world.js";
 import * as view from "./ui/view.js";
 
 const dayKey = todayKey();
 const dateLabel = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+let player = loadPlayerProfile();
 
 let mode = "daily"; // "daily" | "training" | "archive"
 let quiz = [];
@@ -89,6 +91,7 @@ function finishDaily() {
     shareText: s => `Daily Flag #${dayNumber()} — ${s}/10\n${results.map(r => (r ? "🟩" : "🟥")).join("")}`,
   });
   view.renderStats(stats);
+  publishWorld(dayKey, score);
   const tick = () => view.setCountdown(countdownToMidnight());
   tick();
   cdTimer = setInterval(tick, 1000);
@@ -113,6 +116,54 @@ function finishArchive() {
     title: `Défi du ${date}`,
     shareText: s => `Daily Flag #${num} — ${s}/10\n${results.map(r => (r ? "🟩" : "🟥")).join("")}`,
   });
+  publishWorld(archiveKey, results.filter(Boolean).length);
+}
+
+async function publishWorld(targetDayKey, score) {
+  if (!isWorldConfigured()) {
+    view.renderWorldError("Classement mondial non configuré.");
+    return;
+  }
+  view.renderWorldLoading();
+  try {
+    const data = await submitAndLoadWorld(targetDayKey, score, player);
+    view.renderWorld(data,player);
+  } catch (err) {
+    console.error(err);
+    view.renderWorldError("Impossible de charger le classement mondial pour le moment.");
+  }
+}
+
+async function savePlayerFromEditor(next) {
+  player = savePlayerProfile({ ...player, ...next });
+  view.renderPlayerProfile(player);
+  if (!isWorldConfigured()) return;
+  await upsertPlayerProfile(player);
+}
+
+function showPlayerError(message) {
+  console.error(message);
+  alert(message);
+}
+
+async function syncPlayerAtStart() {
+  view.renderPlayerProfile(player);
+  if (!isWorldConfigured()) return;
+  try {
+    const remote = await loadRemotePlayer(player.id);
+    if (remote) {
+      player = savePlayerProfile({
+        ...player,
+        name: remote.name || player.name,
+        avatar: remote.avatar || player.avatar,
+      });
+      view.renderPlayerProfile(player);
+    } else {
+      await upsertPlayerProfile(player);
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 for (const btn of document.querySelectorAll(".top-nav-btn"))
@@ -126,6 +177,8 @@ view.renderDayPicker({
 });
 view.renderCountriesList();
 view.bindDayToggle();
+view.bindPlayerEditor({ onSave: savePlayerFromEditor, onError: showPlayerError });
+syncPlayerAtStart();
 
 view.onNext(onNext);
 showTab("daily");

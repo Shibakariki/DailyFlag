@@ -2,6 +2,7 @@
 const KEY = "dailyflag2";
 const STATS_KEY = "dailyflag_stats";
 const DAYS_KEY = "dailyflag_days"; // { "YYYY-MM-DD": [true|false, ...], ... }
+const PLAYER_KEY = "dailyflag_player";
 
 export function loadProgress(dayKey) {
   try {
@@ -29,6 +30,45 @@ export function saveDayResult(dayKey, res) {
     days[dayKey] = res;
     localStorage.setItem(DAYS_KEY, JSON.stringify(days));
   } catch { /* stockage indisponible */ }
+}
+
+function randomTag() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+function defaultAvatar(seed = "PLAYER", label = "J") {
+  const colors = ["#2563eb", "#7c3aed", "#0ea5e9", "#ef4444", "#16a34a", "#f59e0b"];
+  let acc = 0;
+  for (const ch of seed) acc = (acc * 31 + ch.charCodeAt(0)) | 0;
+  const bg = colors[Math.abs(acc) % colors.length];
+  const initial = (label || "J").trim().charAt(0).toUpperCase() || "J";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="46" fill="#ffffff">${initial}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+export function loadPlayerProfile() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PLAYER_KEY) || "null");
+    if (p && p.id && p.name) {
+      if (!p.avatar) p.avatar = defaultAvatar(p.id, p.name);
+      return p;
+    }
+  } catch { /* ignore malformed value */ }
+  const name = `Joueur-${randomTag()}`;
+  const id = `p_${Date.now().toString(36)}_${randomTag()}`;
+  const next = { id, name, avatar: defaultAvatar(id, name) };
+  try { localStorage.setItem(PLAYER_KEY, JSON.stringify(next)); } catch { /* stockage indisponible */ }
+  return next;
+}
+
+export function savePlayerProfile(profile) {
+  const next = {
+    id: profile.id,
+    name: profile.name?.trim() || "Joueur",
+    avatar: profile.avatar || defaultAvatar(profile.id, profile.name),
+  };
+  try { localStorage.setItem(PLAYER_KEY, JSON.stringify(next)); } catch { /* stockage indisponible */ }
+  return next;
 }
 
 const STATS_DEFAULT = { played: 0, totalScore: 0, bestScore: 0, streak: 0, longestStreak: 0, lastDay: null };

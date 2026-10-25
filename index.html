@@ -17,22 +17,40 @@
       <button class="top-nav-btn active" data-tab="daily">Daily</button>
       <button class="top-nav-btn" data-tab="training">Entraînement</button>
     </nav>
-    <div class="day-picker">
-      <button class="day-toggle" id="day-toggle" aria-haspopup="dialog" aria-expanded="false">
-        <span id="meta"></span>
-        <span class="day-chevron">▾</span>
-      </button>
-      <div class="day-popup hide" id="day-popup" role="dialog" aria-label="Choisir un jour">
-        <div id="cal-container"></div>
+    <div class="header-right">
+      <div class="day-picker">
+        <button class="day-toggle" id="day-toggle" aria-haspopup="dialog" aria-expanded="false">
+          <span id="meta"></span>
+          <span class="day-chevron">▾</span>
+        </button>
+        <div class="day-popup hide" id="day-popup" role="dialog" aria-label="Choisir un jour">
+          <div id="cal-container"></div>
+        </div>
       </div>
-    </div>
-    <div class="countries-picker hide">
-      <button class="countries-toggle" id="countries-toggle" aria-haspopup="dialog" aria-expanded="false">
-        <span>Pays</span>
-        <span class="day-chevron">▾</span>
-      </button>
-      <div class="countries-popup hide" id="countries-popup" role="dialog" aria-label="Liste des pays">
-        <div class="countries-list" id="countries-list"></div>
+      <div class="countries-picker hide">
+        <button class="countries-toggle" id="countries-toggle" aria-haspopup="dialog" aria-expanded="false">
+          <span>Pays</span>
+          <span class="day-chevron">▾</span>
+        </button>
+        <div class="countries-popup hide" id="countries-popup" role="dialog" aria-label="Liste des pays">
+          <div class="countries-list" id="countries-list"></div>
+        </div>
+      </div>
+      <div class="player-picker">
+        <button class="player-toggle" id="player-toggle" aria-haspopup="dialog" aria-expanded="false" title="Profil joueur">
+          <img id="player-avatar-btn" alt="Avatar joueur">
+        </button>
+        <div class="player-popup hide" id="player-popup" role="dialog" aria-label="Profil joueur">
+          <h3>Profil joueur</h3>
+          <label class="player-avatar-wrap" for="player-avatar-input">
+            <img id="player-avatar-preview" alt="Aperçu avatar">
+            <span>Importer une image</span>
+          </label>
+          <input id="player-avatar-input" type="file" accept="image/*" class="hide">
+          <label class="player-name-lbl" for="player-name-input">Nom</label>
+          <input id="player-name-input" type="text" maxlength="24" placeholder="Votre nom">
+          <button class="save-player" id="player-save">Enregistrer</button>
+        </div>
       </div>
     </div>
   </header>
@@ -54,6 +72,7 @@
       <div class="grid" id="grid"></div>
       <button class="share" id="share">Partager mon résultat</button>
       <div class="stats" id="stats"></div>
+      <div class="world" id="world"></div>
       <div class="cd" id="cd"></div>
       <button class="next hide" id="replay">↺ Rejouer</button>
       <div class="recap" id="recap"></div>
@@ -62,6 +81,10 @@
 
 </main>
 
+<script>
+window.DAILYFLAG_SUPABASE_URL = "https://yxkmbphjjbvnltgcphty.supabase.co";
+window.DAILYFLAG_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a21icGhqamJ2bmx0Z2NwaHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4NjkyNTEsImV4cCI6MjEwODQ0NTI1MX0.8dsV0kvG8uMuxErF2tZBnknpyHH1jM0exP8qyrH6QRI";
+</script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

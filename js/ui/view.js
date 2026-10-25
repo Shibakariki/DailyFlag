@@ -38,6 +38,15 @@ export function setCountriesPickerVisible(visible) {
   picker.classList.toggle("hide", !visible);
 }
 
+export function renderPlayerProfile(player) {
+  const btn = $("player-avatar-btn");
+  const prev = $("player-avatar-preview");
+  const nameInput = $("player-name-input");
+  if (btn) btn.src = player.avatar;
+  if (prev) prev.src = player.avatar;
+  if (nameInput) nameInput.value = player.name;
+}
+
 export function renderDayPicker(calendarOpts) {
   calYear = new Date().getFullYear();
   calMonth = new Date().getMonth();
@@ -49,7 +58,9 @@ export function bindDayToggle() {
   const popup = $("day-popup");
   const countriesToggle = $("countries-toggle");
   const countriesPopup = $("countries-popup");
-  if (!toggle || !popup || !countriesToggle || !countriesPopup) return;
+  const playerToggle = $("player-toggle");
+  const playerPopup = $("player-popup");
+  if (!toggle || !popup || !countriesToggle || !countriesPopup || !playerToggle || !playerPopup) return;
 
   const closePopup = () => {
     toggle.classList.remove("open");
@@ -65,6 +76,9 @@ export function bindDayToggle() {
     countriesToggle.classList.remove("open");
     countriesToggle.setAttribute("aria-expanded", "false");
     countriesPopup.classList.add("hide");
+    playerToggle.classList.remove("open");
+    playerToggle.setAttribute("aria-expanded", "false");
+    playerPopup.classList.add("hide");
   };
 
   countriesToggle.onclick = e => {
@@ -75,6 +89,22 @@ export function bindDayToggle() {
     toggle.classList.remove("open");
     toggle.setAttribute("aria-expanded", "false");
     popup.classList.add("hide");
+    playerToggle.classList.remove("open");
+    playerToggle.setAttribute("aria-expanded", "false");
+    playerPopup.classList.add("hide");
+  };
+
+  playerToggle.onclick = e => {
+    e.stopPropagation();
+    const isOpen = playerToggle.classList.toggle("open");
+    playerToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    playerPopup.classList.toggle("hide", !isOpen);
+    toggle.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+    popup.classList.add("hide");
+    countriesToggle.classList.remove("open");
+    countriesToggle.setAttribute("aria-expanded", "false");
+    countriesPopup.classList.add("hide");
   };
 
   document.addEventListener("click", e => {
@@ -87,7 +117,84 @@ export function bindDayToggle() {
       countriesToggle.setAttribute("aria-expanded", "false");
       countriesPopup.classList.add("hide");
     }
+    if (!playerPopup.classList.contains("hide") &&
+        !playerPopup.contains(e.target) &&
+        !playerToggle.contains(e.target)) {
+      playerToggle.classList.remove("open");
+      playerToggle.setAttribute("aria-expanded", "false");
+      playerPopup.classList.add("hide");
+    }
   });
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ""));
+    r.onerror = () => reject(new Error("Lecture de fichier impossible"));
+    r.readAsDataURL(file);
+  });
+}
+
+async function compressAvatar(file) {
+  const data = await fileToDataUrl(file);
+  const img = new Image();
+  const loaded = new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = () => reject(new Error("Image invalide"));
+  });
+  img.src = data;
+  await loaded;
+  const size = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas indisponible");
+  const scale = Math.max(size / img.width, size / img.height);
+  const w = img.width * scale;
+  const h = img.height * scale;
+  ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+  return canvas.toDataURL("image/jpeg", 0.86);
+}
+
+export function bindPlayerEditor({ onSave, onError }) {
+  const inputName = $("player-name-input");
+  const inputAvatar = $("player-avatar-input");
+  const preview = $("player-avatar-preview");
+  const saveBtn = $("player-save");
+  const popup = $("player-popup");
+  const toggle = $("player-toggle");
+  if (!inputName || !inputAvatar || !preview || !saveBtn || !popup || !toggle) return;
+
+  let avatar = preview.src || "";
+
+  inputAvatar.onchange = async () => {
+    const file = inputAvatar.files?.[0];
+    if (!file) return;
+    try {
+      avatar = await compressAvatar(file);
+      preview.src = avatar;
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "Image non importable");
+    }
+  };
+
+  saveBtn.onclick = async () => {
+    const name = inputName.value.trim();
+    if (!name) {
+      onError("Le nom du joueur est requis.");
+      return;
+    }
+    try {
+      await onSave({ name, avatar: avatar || preview.src });
+      toggle.classList.remove("open");
+      toggle.setAttribute("aria-expanded", "false");
+      popup.classList.add("hide");
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "Impossible d'enregistrer le joueur.");
+    }
+  };
 }
 
 export function renderCountriesList() {
@@ -217,6 +324,7 @@ export function renderEnd(quiz, results, { title = "Votre score du jour", shareT
   $("end").classList.remove("hide");
   $("end-title").textContent = title;
   $("stats").innerHTML = "";
+  $("world").innerHTML = "";
   $("cd").textContent = "";
   const score = results.filter(Boolean).length;
   $("score").textContent = `${score}/10`;
@@ -232,6 +340,43 @@ export function renderEnd(quiz, results, { title = "Votre score du jour", shareT
   const replayBtn = $("replay");
   replayBtn.classList.toggle("hide", !onReplay);
   if (onReplay) replayBtn.onclick = onReplay;
+}
+
+export function renderWorldLoading() {
+  const el = $("world");
+  if (!el) return;
+  el.innerHTML = `<p class="world-note">Chargement du classement mondial…</p>`;
+}
+
+export function renderWorldError(message) {
+  const el = $("world");
+  if (!el) return;
+  el.innerHTML = `<p class="world-note">${message}</p>`;
+}
+
+export function renderWorld(data,player) {
+  const el = $("world");
+  if (!el) return;
+  el.innerHTML = `
+    <h3 class="world-title">Classement mondial</h3>
+    <div class="world-meta">
+      <div><b>${data.totalPlayers}</b><span>Joueurs</span></div>
+      <div><b>${data.avgScore}/10</b><span>Moyenne</span></div>
+      <div><b>${data.bestScore}/10</b><span>Meilleur</span></div>
+    </div>
+    <div class="world-list">
+      ${data.leaderboard.map(r =>
+      `<div class="world-row${r.rank === data.myRank ? " world-you" : ""}">
+        <span class="world-rank">#${r.rank}</span>
+        <span class="world-player">
+          <img class="world-avatar" src="${player.avatar}" alt="">
+          <span class="world-name">${r.name}</span>
+        </span>
+        <strong>${r.score}/10</strong>
+      </div>`).join("")}
+    </div>
+    <p class="world-note">${data.myRank ? `Votre rang : #${data.myRank} (${data.myScore}/10)` : "Rang indisponible"}</p>
+  `;
 }
 
 export function renderStats(stats) {
