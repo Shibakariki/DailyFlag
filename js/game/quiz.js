@@ -3,9 +3,9 @@ import { tierOf, DAILY_PLAN } from "../data/difficulty.js";
 import { similarTo } from "../data/similar.js";
 import { mulberry32, seedFromString, makeShuffle } from "../lib/random.js";
 
-function buildQuiz(shuffle) {
+function buildQuiz(shuffle, plan = DAILY_PLAN) {
   const quiz = [];
-  for (const [tier, count] of DAILY_PLAN) {
+  for (const [tier, count] of plan) {
     const pool = CODES.filter(c => tierOf(c) === tier);
     for (const code of shuffle(pool).slice(0, count)) {
       const distractors = shuffle(similarTo(code)).slice(0, 3);
@@ -27,6 +27,10 @@ export function buildDailyQuiz(dayKey) {
 /**
  * Quiz d'entraînement : tirage aléatoire à chaque appel.
  */
-export function buildTrainingQuiz() {
-  return buildQuiz(makeShuffle(mulberry32(Math.floor(Math.random() * 0xFFFFFFFF))));
+export function buildTrainingQuiz(mode = "classic") {
+  const plan = mode === "classic" ? DAILY_PLAN : [[Number(mode), 10]];
+  return buildQuiz(
+    makeShuffle(mulberry32(Math.floor(Math.random() * 0xFFFFFFFF))),
+    plan,
+  );
 }

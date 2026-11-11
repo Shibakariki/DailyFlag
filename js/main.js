@@ -13,12 +13,21 @@ let quiz = [];
 let results = [];
 let cdTimer = null;
 let archiveKey = null;
+let trainingTier = "classic";
+
+function trainingLabel() {
+  return trainingTier === "classic"
+    ? "Classique"
+    : ["Facile", "Moyen", "Difficile"][Number(trainingTier)] || "Classique";
+}
 
 function showTab(tab) {
   clearInterval(cdTimer);
   view.setActiveTab(tab);
   view.setDayPickerVisible(tab !== "training");
   view.setCountriesPickerVisible(tab === "training");
+  view.setTrainingFilterVisible(tab === "training");
+  if (tab === "daily") view.setSelectedDayKey(dayKey);
   if (tab === "daily") {
     startDaily();
   } else {
@@ -38,8 +47,9 @@ function startDaily() {
 
 function startTraining() {
   mode = "training";
-  quiz = buildTrainingQuiz();
+  quiz = buildTrainingQuiz(trainingTier);
   results = [];
+  view.setMeta(`Entraînement · ${trainingLabel()}`);
   view.showSection("quiz");
   nextQuestion();
 }
@@ -47,6 +57,7 @@ function startTraining() {
 function startArchive(k) {
   mode = "archive";
   archiveKey = k;
+  view.setSelectedDayKey(k);
   quiz = buildDailyQuiz(k);
   results = loadDayResult(k) ?? [];
   view.setMeta(`#${dayNumberFromKey(k)} · ${formatDayKey(k)}`);
@@ -100,7 +111,7 @@ function finishDaily() {
 function finishTraining() {
   view.renderDots(results, quiz.length, -1);
   view.renderEnd(quiz, results, {
-    title: "Score d'entraînement",
+    title: `Score d'entraînement (${trainingLabel()})`,
     shareText: s => `Daily Flag – Entraînement — ${s}/10\n${results.map(r => (r ? "🟩" : "🟥")).join("")}`,
     onReplay: startTraining,
   });
@@ -177,6 +188,11 @@ view.renderDayPicker({
 });
 view.renderCountriesList();
 view.bindDayToggle();
+view.setTrainingTierActive(trainingTier);
+view.bindTrainingFilter(filterMode => {
+  trainingTier = filterMode;
+  if (mode === "training") startTraining();
+});
 view.bindPlayerEditor({ onSave: savePlayerFromEditor, onError: showPlayerError });
 syncPlayerAtStart();
 

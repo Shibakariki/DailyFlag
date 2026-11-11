@@ -38,6 +38,17 @@ export function setCountriesPickerVisible(visible) {
   picker.classList.toggle("hide", !visible);
 }
 
+export function setTrainingFilterVisible(visible) {
+  const filter = $("training-filter");
+  if (!filter) return;
+  filter.classList.toggle("hide", !visible);
+}
+
+export function setTrainingTierActive(mode) {
+  for (const btn of document.querySelectorAll(".training-filter-btn"))
+    btn.classList.toggle("active", btn.dataset.mode === String(mode));
+}
+
 export function renderPlayerProfile(player) {
   const btn = $("player-avatar-btn");
   const prev = $("player-avatar-preview");
@@ -48,9 +59,18 @@ export function renderPlayerProfile(player) {
 }
 
 export function renderDayPicker(calendarOpts) {
+  calendarState = calendarOpts;
   calYear = new Date().getFullYear();
   calMonth = new Date().getMonth();
   renderCalendar($("cal-container"), calendarOpts);
+}
+
+let calendarState = null;
+let selectedDayKey = null;
+
+export function setSelectedDayKey(dayKey) {
+  selectedDayKey = dayKey || null;
+  if (calendarState) renderDayPicker(calendarState);
 }
 
 export function bindDayToggle() {
@@ -117,6 +137,7 @@ export function bindDayToggle() {
       countriesToggle.setAttribute("aria-expanded", "false");
       countriesPopup.classList.add("hide");
     }
+
     if (!playerPopup.classList.contains("hide") &&
         !playerPopup.contains(e.target) &&
         !playerToggle.contains(e.target)) {
@@ -125,6 +146,16 @@ export function bindDayToggle() {
       playerPopup.classList.add("hide");
     }
   });
+}
+
+export function bindTrainingFilter(onChange) {
+  for (const btn of document.querySelectorAll(".training-filter-btn")) {
+    btn.onclick = () => {
+      const mode = btn.dataset.mode;
+      setTrainingTierActive(mode);
+      onChange(mode);
+    };
+  }
 }
 
 function fileToDataUrl(file) {
@@ -242,12 +273,13 @@ function renderCalendar(container, { epochKey, todayKey: todayStr, getResult, on
     for (let d = 1; d <= lastDate; d++) {
       const k = `${calYear}-${p2(cm)}-${p2(d)}`;
       const isToday = k === todayStr;
+      const isSelected = k === selectedDayKey;
       const isFuture = k > todayStr;
       const beforeEpoch = k < epochKey;
       const res = (!isToday && !isFuture && !beforeEpoch) ? getResult(k) : null;
       const done = Array.isArray(res) && res.length >= 10;
       const disabled = isFuture || beforeEpoch;
-      const cls = ["cal-day", isToday ? "today" : "", done ? "done" : ""].filter(Boolean).join(" ");
+      const cls = ["cal-day", isToday ? "today" : "", done ? "done" : "", isSelected ? "selected" : ""].filter(Boolean).join(" ");
 
       let tip = "";
       if (isToday) tip = ` title="Défi du jour"`;
@@ -264,12 +296,21 @@ function renderCalendar(container, { epochKey, todayKey: todayStr, getResult, on
 
     const prev = container.querySelector("[data-dir=prev]");
     const next = container.querySelector("[data-dir=next]");
-    if (prev) prev.onclick = () => { if (--calMonth < 0) { calMonth = 11; calYear--; } build(); };
-    if (next) next.onclick = () => { if (++calMonth > 11) { calMonth = 0; calYear++; } build(); };
+    if (prev) prev.onclick = e => {
+      e.stopPropagation();
+      if (--calMonth < 0) { calMonth = 11; calYear--; }
+      build();
+    };
+    if (next) next.onclick = e => {
+      e.stopPropagation();
+      if (++calMonth > 11) { calMonth = 0; calYear++; }
+      build();
+    };
     const toggle = $("day-toggle");
     const popup = $("day-popup");
     for (const btn of container.querySelectorAll(".cal-day[data-key]")) {
       btn.onclick = () => {
+        selectedDayKey = btn.dataset.key;
         onSelect(btn.dataset.key);
         if (toggle && popup) {
           toggle.classList.remove("open");
